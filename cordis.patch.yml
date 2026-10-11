@@ -1,0 +1,4 @@
+# Register the Accio provider without changing the profile's default model.
+- insert:
+    - id: dsh-connect-accio
+      name: dsh-connect-accio
