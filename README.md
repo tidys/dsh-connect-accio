@@ -13,6 +13,19 @@
 - **思维链分离** —— Accio 把思维链放在带 `thought` 标记的 part 里，插件映射到
   `reasoning_content`，不会污染正文。
 - **token 自动刷新** —— 到期前自动刷新；刷新会轮换 refresh token，因此并发调用被合并为单次。
+- **账号与积分详情卡片** —— 设置页显示账号信息（用户名、邮箱、ID、套餐、区域、手机绑定）、
+  三类积分（每日 / 套餐 / 额外）的用量进度条与有效期、每日重置倒计时、积分来源与最近用量明细。
+
+## 关于签到
+
+**Accio 没有签到接口，本插件不提供签到按钮。** 这是实测结论，不是偷懒：
+
+- 桌面端整个 bundle 里**不存在**任何签到路径或"签到"字样；
+- 15 个可能的接口拼写（`/api/entitlement/checkin`、`/api/signin`、`/api/checkin` 等）**全部 404**；
+- 积分来源记录显示每日积分是服务端自动发放的 `DAILY_REWARD`（"Daily refresh credits"），
+  当天有效、次日自动刷新——是**定时刷新**，不是用户动作。
+
+所以卡片改为**如实说明这一点**，并显示每日重置倒计时，而不是放一个永远失败的按钮。
 
 ## 安装
 
@@ -67,6 +80,25 @@ sg.getSecurityFactorsForWeb(JSON.stringify({
 多数情况下三项路径留空即可。若 Accio 装在非标准位置且注册表读取失败，设置
 环境变量 `ACCIO_SECURITY_GUARD_DIR` 指向
 `<Accio 安装目录>\resources\app.asar.unpacked\node_modules\@phoenix-common\security-guard`。
+
+## 账号与积分接口
+
+设置卡片通过插件自有的只读路由 `/plugins/dsh-connect-accio/credits` 取数；该路由只接受
+loopback 来源（外部 Origin 返回 403），并聚合以下 Accio 接口：
+
+| 接口 | 用途 |
+| --- | --- |
+| `POST /api/auth/userinfo` | 账号身份（**POST**，token 在 body） |
+| `GET /api/entitlement/currentSubscription` | 三类积分与套餐（**GET**，token 在 query） |
+| `GET /api/entitlement/quota` | 已用比例与每日重置倒计时 |
+| `GET /api/entitlement/listGrantRecords` | 积分来源与有效期 |
+| `GET /api/entitlement/listUserMessageBill` | 最近逐条用量 |
+| `GET /api/entitlement/queryCreditUsageTrend` | 每日用量趋势 |
+
+> 注意两个接口的**传参方式不同**：`userinfo` 必须 POST 且 token 放在 body，其余为 GET 且
+> token 放在 query。用错会得到 `405 Method Not Allowed` 或 `400 Bad Request`。
+
+这些查询**都是只读、不消耗积分**。
 
 ## 已知限制
 
