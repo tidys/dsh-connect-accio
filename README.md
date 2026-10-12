@@ -1,9 +1,63 @@
 # dsh-connect-accio
 
+[![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![release](https://img.shields.io/badge/release-v0.2.0-blue)](https://github.com/tidys/dsh-connect-accio/releases/tag/v0.2.0)
+![platform](https://img.shields.io/badge/platform-Windows-lightgrey)
+
 把本机已登录的 **Accio** 模型接入 **DeepSeek Harness (DSH)**。
 
-插件不要求你复制 token、也不接管 Accio 的登录流程：它读取 Accio 已经存在本机的凭据，用
-**当前 Windows 用户的 DPAPI 密钥**解密，并用 **Accio 自带的 SecurityGuard 原生库**给请求签名。
+---
+
+## Accio 是什么
+
+[**Accio**](https://www.accio-ai.com) 是阿里巴巴国际站推出的 **AI 电商工作台**（桌面客户端，
+Electron 应用）。它内置一个 Agent 执行环境，背后聚合了多家模型供应商，以**积分（credits）计费**：
+
+- 免费注册送 500 积分，每天再自动补 100 积分；
+- 模型按倍率扣积分（如 Qwen 3.8 Flash 倍率 0.03 很便宜，GPT/旗舰级倍率更高）；
+- 同一个账号里能用 **DeepSeek V4 Pro / V4.1 Flash、GLM-5.3、Kimi K2.6、MiniMax M3、
+  Qwen 3.8 全系** 等模型。
+
+**下载地址**（按你的区域选一个，客户端里登录后本插件才能工作）：
+
+| 区域 | 官网 | 桌面端下载 |
+| --- | --- | --- |
+| 中国大陆 | [www.accio-ai.com](https://www.accio-ai.com) | [work-download.accio-ai.com](https://work-download.accio-ai.com/package/) |
+| 国际版 | [www.accio.com](https://www.accio.com) | 同上（客户端内自动选择区域） |
+
+> 本插件在 **Accio 0.34.3** 上开发并验证。Accio 是闭源客户端，其接口随版本可能变化。
+
+## 这个插件在做什么
+
+DSH 本身不带 Accio 的接入能力。这个插件在**本机**把两者连起来：
+
+```
+你在 DSH 里选一个 Accio 模型发消息
+        │
+        ▼
+DSH 的 PiAiAdapter（OpenAI 线格式）
+        │
+        ▼
+插件宿主侧（本插件，运行在 DSH 进程里）
+        │   ① 读凭据   ② 签名请求   ③ 翻译协议
+        ▼
+Accio 网关  ->  Accio 账号计费  ->  模型回复
+```
+
+具体做三件事：
+
+1. **拿凭据，但不碰登录** —— 读取 Accio 已经写在本机的 `credentials.enc`，用当前 Windows
+   用户的 DPAPI 密钥解密。**不复制 token、不记录密码、不接管登录流程**，你在 Accio 里登录
+   一次即可，退出登录插件也随之失效。
+2. **补齐请求签名** —— Accio 网关要求每个请求带阿里 SecurityGuard 的签名头。插件直接加载
+   **Accio 自带的** `security_guard.node` 原生库来签名，不做逆向算法、不做中间人抓包。
+3. **翻译协议** —— Accio 用的是 Gemini 风格的信封 + 私有 SSE，DSH 用的是 OpenAI 线格式。
+   插件在本机回环端口上做双向转换，让工具调用、思维链、用量统计都能正常往返。
+
+**安全边界**：所有请求都发生在你自己的机器、你自己的登录态下，计费走你自己的 Accio 账号。
+插件的取数路由只接受 loopback 来源，外部网页无法读取你的账号数据。
+
+---
 
 ## 功能
 
