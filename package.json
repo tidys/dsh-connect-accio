@@ -4,6 +4,14 @@
   "description": "把本机已登录的 Accio 模型接入 DeepSeek Harness：复用本机凭据，提供实时模型目录、工具调用、账号与积分详情。",
   "version": "0.2.0",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tidys/dsh-connect-accio.git"
+  },
+  "homepage": "https://github.com/tidys/dsh-connect-accio#readme",
+  "bugs": {
+    "url": "https://github.com/tidys/dsh-connect-accio/issues"
+  },
   "keywords": [
     "dsh-plugin",
     "deepseek-harness",

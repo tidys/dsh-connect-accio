@@ -1,0 +1,11 @@
+# Dependencies (local dev/test installs are never published)
+node_modules/
+
+# Local test artefacts
+*.log
+*.keep
+package.json.keep
+
+# OS / editor noise
+Thumbs.db
+.DS_Store

@@ -29,8 +29,55 @@
 
 ## 安装
 
+### 前置条件
+
+| 依赖 | 说明 |
+| --- | --- |
+| **Windows 10/11** | 凭据解密依赖 DPAPI，签名依赖 Windows 版 `security_guard.node` |
+| **DeepSeek Harness** | 已安装并可启动（`dsh` 命令可用） |
+| **Accio 桌面端已登录** | 插件读取本机登录态，不提供登录入口 |
+
+### 从 GitHub 安装（推荐）
+
 ```sh
-dsh plugin --profile desktop add <本插件目录或 npm 包名>
+dsh plugin --profile desktop add github:tidys/dsh-connect-accio
+```
+
+### 从本地目录安装（开发 / 源码运行）
+
+```sh
+git clone https://github.com/tidys/dsh-connect-accio.git
+dsh plugin --profile desktop add .\dsh-connect-accio
+```
+
+> `--profile` 后面跟你的 profile 名；默认桌面版是 `desktop`。可用 `dsh --help` 查看。
+
+### 启用
+
+1. **重启 DSH**（插件在启动时加载，热更新不覆盖宿主 provider）。
+2. 打开 **设置 → 插件**，应能看到带 Accio 图标的 **DSH Connect Accio** 卡片：
+   - 卡片上半部分是账号信息与三类积分；
+   - 模型选择器里出现 Accio 的 15 个模型（Standard、DeepSeek V4 Pro、GLM-5.3 等）。
+3. 选一个 Accio 模型开始对话即可，计费走你的 Accio 账号。
+
+### 验证是否加载成功
+
+卡片若显示「未登录或登录已失效」，先确认 Accio 桌面端已登录；若模型选择器里没有
+Accio 条目，查看 DSH 启动日志中的 `dsh-connect-accio:` 行，常见原因是找不到
+`security_guard.node`（见下方[配置](#配置)一节的 `ACCIO_SECURITY_GUARD_DIR`）。
+
+### 卸载
+
+```sh
+dsh plugin --profile desktop remove dsh-connect-accio
+```
+
+`remove` 只移除依赖；`dsh plugin add` 同时写入的 bundle 条目要手动从 profile 的
+`package.json`（`dsh.profile.bundles` 数组）里删掉，然后再重启 DSH：
+
+```sh
+# profile 位置（默认桌面 profile）
+%USERPROFILE%\.dsh\profiles\desktop\package.json
 ```
 
 装完需要重启 DSH。
